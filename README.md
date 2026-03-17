@@ -1,12 +1,12 @@
-# Introduction
+# 1) Introduction
 This project explores the use of satellite remote sensing to monitor coastal environmental conditions in the Baltic Sea. the workflow focuses on two spectral indicators: the Normalized Difference Vegetation Index (NDVI) and the Normalized Difference Turbidity Index (NDTI). NDVI is used to detect coastal vegetation and potential floating algal biomass, while NDTI serves as a proxy for suspended sediments and water turbidity.
 The objective of this project is to develop a reproducible satellite-based workflow for monitoring coastal environmental dynamics in the Gulf of Finland using NDVI and NDTI derived from Sentinel-2 imagery.
 
 Specifically, the project aims to: investigate the relationship between turbidity and vegetation dynamics, including a lagged regression where NDVI responds to turbidity in the previous month and identify persistent spatial hotspots of high NDVI and NDTI through multi-year percentile-based persistence analysis.
 
-# Methods
+# 2) Methods
 
-## Study Area
+## 2.1) Study Area
 
 The analysis focuses on the **Gulf of Finland**, located in the eastern Baltic Sea. This region is characterized by strong land–sea interactions driven by river discharge, sediment transport, coastal vegetation dynamics, and seasonal phytoplankton blooms. These processes produce detectable spectral signals in optical satellite imagery.
 
@@ -27,7 +27,7 @@ To analyze coastal processes separately on land and water, two spatial domains a
 
 The land buffer is used for vegetation analysis (NDVI), while the marine buffer is used to analyze turbidity signals (NDTI).
 
-## Satellite Data
+## 2.2) Satellite Data
 
 Satellite observations are derived from **Sentinel-2 Surface Reflectance imagery**.
 
@@ -44,7 +44,7 @@ The analysis uses the **COPERNICUS/S2_SR_HARMONIZED** dataset within Google Eart
 
 Surface reflectance values represent the proportion of incoming solar radiation reflected by the Earth’s surface.
 
-## Normalized Difference Vegetation Index (NDVI)
+## 2.3) Normalized Difference Vegetation Index (NDVI)
 
 NDVI is used to detect vegetation biomass and potential floating algae.
 
@@ -76,7 +76,20 @@ $$
 
 are interpreted as **significant vegetation or algal biomass**.
 
-## Normalized Difference Turbidity Index (NDTI)
+The average coastal NDVI is presented below:
+<table>
+  <tr>
+    <td width="55%" valign="top">
+      <img src="Figures/Mean_NDVI_Horitzontal.png" width="100%"><br><br>
+      <img src="Figures/seasonal_ndvi_by_year.png" width="100%">
+    </td>
+    <td width="45%" valign="top">
+      <img src="Figures/Mean_NDVI_Vertical.png" width="100%">
+    </td>
+  </tr>
+</table>
+
+## 2.4) Normalized Difference Turbidity Index (NDTI)
 
 NDTI is used as a proxy for suspended sediments and turbidity in coastal waters.
 
@@ -99,7 +112,20 @@ $$
 
 are interpreted as **high turbidity conditions**.
 
-## Lagged Regression Model
+The average NDTI is presented below:
+<table>
+  <tr>
+    <td width="55%" valign="top">
+      <img src="Figures/Mean_NDTI_Horitzontal.png" width="100%"><br><br>
+      <img src="Figures/seasonal_ndti_by_year.png" width="100%">
+    </td>
+    <td width="45%" valign="top">
+      <img src="Figures/Mean_NDTI_Vertical.png" width="100%">
+    </td>
+  </tr>
+</table>
+
+## 2.5) Lagged Regression Model
 
 To investigate interactions between turbidity and vegetation signals, a lagged regression model is estimated.
 
@@ -121,11 +147,11 @@ where
 
 The model is estimated using **ordinary least squares (OLS)**.
 
-## Hotspot Persistence Analysis
+## 2.6) Hotspot Persistence Analysis
 
 Persistent environmental signals are identified using percentile-based hotspot detection.
 
-## Percentile threshold
+### Percentile threshold
 
 $$
 T_{80} = P_{80}(X)
@@ -135,7 +161,7 @@ where $$P_{80}$$ is the 80th percentile of index values.
 
 ---
 
-## Hotspot classification
+### Hotspot classification
 
 $$
 H_t(x,y) =
@@ -147,7 +173,7 @@ $$
 
 ---
 
-## Persistence calculation
+### Persistence calculation
 
 Hotspot persistence is defined as
 
@@ -159,7 +185,7 @@ Higher persistence values indicate locations where vegetation or turbidity signa
 
 ---
 
-# Workflow
+## 2.7) Workflow
 
 ```mermaid
 flowchart TD
@@ -190,3 +216,76 @@ I --> N[Hotspot persistence analysis]
 
 M --> O[Figures and tables]
 N --> O
+```
+
+# 3) Regression Result
+## Regression Results
+
+| Metric | Value |
+|------|------|
+| Observations | 32 |
+| R² | 0.311 |
+| Adjusted R² | 0.263 |
+| F-statistic | 6.539 |
+| Model p-value | 0.00453 |
+| AIC | -102.5 |
+
+---
+
+### Coefficients
+
+| Variable | Coefficient | Std. Error | t-value | p-value |
+|--------|------------|-----------|--------|--------|
+| Intercept | 0.5380 | 0.064 | 8.365 | < 0.001 |
+| NDTI (lag 1) | 0.8685 | 0.325 | 2.670 | 0.012 |
+| NDTI² | 2.1814 | 0.645 | 3.381 | 0.002 |
+
+---
+
+## Model Diagnostics
+
+| Test | Result | Interpretation |
+|-----|-------|---------------|
+| Durbin–Watson | 2.13 | No autocorrelation |
+| Jarque–Bera p-value | 0.540 | Residuals approximately normal |
+| Condition Number | 82.8 | No severe multicollinearity |
+
+---
+The model has a statistically significant nonlinear relationship between turbidity and vegetation. Both linear $NDTI_{t-1}$ and quadratic $NDTI_t^2$ terms are significant
+Coastal vegetation productivity is influenced by turbidity, but the effect is not linear. Instead, turbidity interacts with vegetation through multiple mechanisms such as sediment transport, nutrient availability, and light attenuation.
+
+This nonlinear relationship likely reflects competing processes:
+
+- **Low turbidity** → better light penetration → supports vegetation
+- **Moderate turbidity** → may introduce nutrients → enhances productivity
+- **High turbidity** → reduces light availability → limits growth
+
+# 4) Hotspot Analysis
+<p float="left", align="middle">
+  <img src="Figures/Mean_NDTI_Hotspot_Horitzontal.png" width="80%" />
+</p>
+Persistent hotspots are concentrated along nearshore zones and archipelagic environments. The persistence maps show a clear coastal-to-offshore gradient:
+- High persistence in shallow coastal waters  
+- Rapid decay toward open sea  
+This reflects a controlling processes of the area:
+
+| Zone | Dominant Processes | Expected Dynamics |
+|------|------------------|------------------|
+| Nearshore | Nutrient loading, resuspension | Frequent hotspot activation |
+| Archipelago | Retention, low flushing | Persistent hotspots |
+| Offshore | Mixing, dilution | Weak or absent hotspots |
+
+<p float="left", align="middle">
+  <img src="Figures/Mean_NDTI_Hotspot_Vertical.png" width="70%" />
+</p>
+
+Hotspots are spatially clustered at scales of several kilometers, particularly in:
+
+- Semi-enclosed bays  
+- Urban-influenced coastal regions  
+- Transition zones between land and open water  
+
+These clusters correspond to **hydrodynamic retention zones**, where:
+
+- Water residence time is high  
+- Nutrient accumulation is enhanced  
